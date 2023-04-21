@@ -1,0 +1,15 @@
+This YAML code deploys a Django Api with docker compose and docker on AWS Ec2 using GitHub Actions.
+It performs the following steps:
+
+1. It is triggered on a push event to the main branch
+2. The script is divided into a single job named "deploy"
+3. The job is executed on the latest version of Ubuntu
+4. The script checks out the repository
+5. It fixes any unmet dependencies
+6. It installs Docker and Docker Compose
+7. It builds a Docker image using a specified Dockerfile
+8. It deploys the image using Docker Compose to an EC2 instance
+9. It uses environment variables for AWS access keys
+10. It uses a secret for an EC2 SSH key
+11. The script copies files to the EC2 instance using SCP
+12. It executes a Docker Compose command to start the deployed applicationHere are the steps performed by this YAML script:
