@@ -1,0 +1,55 @@
+
+name: Deploy To AWS-S3
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v2
+      
+      - name: Setup Node.js and Angular CLI
+        uses: actions/setup-node@v2
+        with:
+          node-version: '14.20'
+          cache: 'npm'
+      
+      - name: Install dependencies
+        run: npm install
+
+      - name: Install required packages for building
+        run: |
+          npm install -g @angular/cli@15.0.4
+          npm install popper.js --save-dev
+      
+      - name: Build Angular app
+        run: ng build --configuration=production
+      
+      - name: Deploy to S3 bucket
+        uses: jakejarvis/s3-sync-action@v0.5.0
+        with:
+          args: --delete
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          AWS_DEFAULT_REGION: 'Region (us-east-1)'
+          AWS_S3_BUCKET: 'S3-Bucker Name'
+          SOURCE_DIR: 'Src Directory'
+
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v1
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: us-east-1
+      - name: Invalidate CloudFront cache
+        run:  aws cloudfront create-invalidation --distribution-id EZ18RNTH3GRA4 --paths '/*'
+        env:
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}

@@ -1,0 +1,10 @@
+This YAML code deploys a Node.js/Angular app on AWS-S3 bucket using GitHub Actions.
+It performs the following steps:
+1. Checks out the code from GitHub.
+2. Sets up Node.js and Angular CLI.
+3. Installs dependencies.
+4. Builds the Angular app for production.
+5. Deploys the app to the specified S3 bucket using the jakejarvis/s3-sync-action@v0.5.0 action.
+6. Configures AWS credentials using aws-actions/configure-aws-credentials@v1 action.
+7. Invalidates CloudFront cache to reflect changes made in the S3 bucket.
+The deployment is triggered on push to the main branch. The AWS access keys and S3 bucket name are stored in GitHub Secrets.
