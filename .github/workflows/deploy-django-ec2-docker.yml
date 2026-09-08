@@ -1,0 +1,49 @@
+name: Deploy Dockerized App to EC2
+
+on:
+  workflow_call:
+    inputs:
+      dockerfile-path:
+        description: "Path to the Dockerfile to build"
+        required: true
+        type: string
+      image-name:
+        description: "Docker image name:tag to build"
+        required: false
+        type: string
+        default: "app:latest"
+      ec2-host:
+        description: "EC2 instance hostname or IP"
+        required: true
+        type: string
+      ec2-user:
+        description: "SSH user on the EC2 instance"
+        required: false
+        type: string
+        default: "ubuntu"
+      remote-path:
+        description: "Remote directory on the EC2 instance containing docker-compose.yml"
+        required: true
+        type: string
+    secrets:
+      EC2_SSH_KEY:
+        description: "Base64-encoded SSH private key for the EC2 instance"
+        required: true
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Build Docker image
+        run: docker build -t ${{ inputs.image-name }} -f ${{ inputs.dockerfile-path }} .
+
+      - name: Deploy with Docker Compose over SSH
+        run: |
+          echo "${{ secrets.EC2_SSH_KEY }}" | base64 --decode > ec2_ssh_key.pem
+          chmod 600 ec2_ssh_key.pem
+          scp -r -o StrictHostKeyChecking=no -i ec2_ssh_key.pem ./* "${{ inputs.ec2-user }}@${{ inputs.ec2-host }}:${{ inputs.remote-path }}/"
+          ssh -o StrictHostKeyChecking=no -i ec2_ssh_key.pem "${{ inputs.ec2-user }}@${{ inputs.ec2-host }}" "cd ${{ inputs.remote-path }} && docker-compose up -d --build"
+          rm -f ec2_ssh_key.pem
